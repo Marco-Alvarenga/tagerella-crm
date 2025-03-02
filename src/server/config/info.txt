@@ -1,0 +1,28 @@
+ email: 'admin@tagarella.com.br', senha: 'Tagarella!01' });
+
+
+Funcao
+	id_func		Descrcao
+	1		jogos	
+	2		categiria_jogo
+	3		modelo_jogo
+	4		jogo
+	5		
+	6		cliente
+	7		nome_cliente
+	8		email_cliente
+
+
+jogos
+id
+
+submenu
+id
+
+
+sub_submenu
+id
+
+
+informacao_jogos
+id

@@ -1,0 +1,10 @@
+Então, em cada controller que precisa de upload:
+
+
+const createMulterConfig = require('../config/multer.config');
+
+const upload = createMulterConfig('documentos'); // ou 'jogos', etc
+
+
+
+Isso deve resolver os conflitos de upload e manter a consistência entre diferentes partes da aplicação.

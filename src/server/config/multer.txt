@@ -1,0 +1,72 @@
+// src/server/config/multer.js
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+
+// Configuração do storage
+const storage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+        let uploadPath;
+        
+        // Definir pasta baseado no tipo de arquivo
+        if (file.fieldname === 'documento') {
+            uploadPath = path.join(__dirname, '../../../uploads/documentos', req.params.id);
+        } else if (file.fieldname === 'foto') {
+            uploadPath = path.join(__dirname, '../../../uploads/fotos', req.params.id);
+        } else if (file.fieldname === 'assinatura') {
+            uploadPath = path.join(__dirname, '../../../uploads/assinaturas', req.params.id);
+        } else {
+            uploadPath = path.join(__dirname, '../../../uploads/outros', req.params.id);
+        }
+
+        // Criar pasta se não existir
+        try {
+            await fs.mkdir(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: (req, file, cb) => {
+        // Gerar nome único para o arquivo
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+});
+
+// Filtro de arquivos
+const fileFilter = (req, file, cb) => {
+    // Tipos permitidos por categoria
+    const allowedTypes = {
+        documento: ['application/pdf', 'image/jpeg', 'image/png'],
+        foto: ['image/jpeg', 'image/png'],
+        assinatura: ['image/jpeg', 'image/png', 'image/svg+xml']
+    };
+
+    const allowed = allowedTypes[file.fieldname] || ['application/pdf', 'image/jpeg', 'image/png'];
+    
+    if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error(`Tipo de arquivo não permitido para ${file.fieldname}`), false);
+    }
+};
+
+// Limites de tamanho por tipo
+const limits = {
+    documento: 5 * 1024 * 1024, // 5MB
+    foto: 2 * 1024 * 1024,      // 2MB
+    assinatura: 1 * 1024 * 1024 // 1MB
+};
+
+// Configuração do multer
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: {
+        fileSize: (req, file) => limits[file.fieldname] || 5 * 1024 * 1024
+    }
+});
+
+module.exports = upload;
