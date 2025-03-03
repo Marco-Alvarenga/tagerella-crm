@@ -214,6 +214,8 @@ const jogoController = {
 	
 	getJogoConfig: async (req, res) => {
 		try {
+                      console.log('Buscando configuração para o ID:', req.params.id);
+
 			const result = await pool.query(`
 			SELECT 
 				j.jogo_id,
@@ -233,11 +235,16 @@ const jogoController = {
 			LEFT JOIN jogo_config jc ON j.jogo_id = jc.jogo_id
 			WHERE j.menu_id = $1
 			`, [req.params.id]);
-		
-			console.log('Dados encontrados:', result.rows[0]); // Debug
-			res.json(result.rows[0] || {});
+
+                 if (result.rows.length === 0) {
+                       console.log('Nenhuma configuração encontrada para o menu_id:', req.params.id);
+                       return res.json({}); // Retornar objeto vazio em vez de status 404
+                }
+
+			console.log('Configuração encontrada:', result.rows[0]); // Debug
+			res.json(result.rows[0]);
 		} catch (error) {
-			console.error('Erro ao buscar config:', error);
+			console.error('Erro ao buscar configuração do jogo:', error);
 			res.status(500).json({ message: error.message });
 		}
 	},

@@ -4,6 +4,13 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 require('dotenv').config();
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
 
 // Import routes
 const clientRoutes = require('../routes/client.routes');
@@ -20,9 +27,9 @@ const app = express();
 
 
 // Middleware
-app.use(cors({ credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Configurações de diretórios de upload
 const uploadsDir = path.join(__dirname, '../../../uploads');
@@ -62,25 +69,31 @@ app.use(express.static(path.join(__dirname, '../../../public')));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Erro na requisição:', err);
-    
+  console.error('ERRO DE SERVIDOR:');
+  console.error('URL:', req.originalUrl);
+  console.error('Método:', req.method);
+  console.error('Corpo da requisição:', req.body);
+  console.error('Erro detalhado:', err);
+  console.error('Stack:', err.stack);
+
     if (err instanceof multer.MulterError) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             message: 'Erro no upload do arquivo',
-            error: err.message 
+            error: err.message
         });
     }
 
     if (err.message && err.message.includes('Boundary not found')) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             message: 'Erro no formato do upload',
             error: 'Formato multipart inválido'
         });
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
         message: 'Erro interno do servidor',
-        error: err.message || 'Erro desconhecido'
+        error: err.message,
+        path: req.originalUrl
     });
 });
 

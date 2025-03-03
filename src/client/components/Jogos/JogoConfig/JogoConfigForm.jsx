@@ -26,11 +26,21 @@ const JogoConfigForm = ({ open, onClose, onSuccess, menu }) => {
 
  const fetchJogoConfig = async () => {
    try {
+
+    // Vamos adicionar logs para debug
+    console.log(`Buscando configuração para o menu_id: ${menu?.menu_id}`);
+
      const response = await fetch(`/api/jogos/${menu.menu_id}/config`, {
        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
      });
-     if (response.ok) {
-       const data = await response.json();
+
+    // Verificar resposta para debugar
+    const text = await response.text(); // Obter o texto da resposta
+    console.log('Resposta bruta:', text);
+    
+    try {
+      // Tentar converter para JSON
+      const data = JSON.parse(text);
        setFormData({
          ...formData,
          ...data,
@@ -38,11 +48,17 @@ const JogoConfigForm = ({ open, onClose, onSuccess, menu }) => {
          numbers: Boolean(data.numbers),
          conteudo: data.conteudo || []
        });
-     }
-   } catch (error) {
-     console.error('Erro ao buscar configuração:', error);
-   }
- };
+    } catch (jsonError) {
+      console.error('Erro ao parsear JSON:', jsonError);
+      // Verifica se a resposta contém HTML, o que indicaria um erro de rota
+      if (text.includes('<!DOCTYPE html>') || text.includes('<!-- ')) {
+        console.error('Recebeu HTML em vez de JSON. Verifique se a rota da API está correta e se o proxy está configurado corretamente.');
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao buscar configuração:', error);
+  }
+};
 
  const handleSubmit = async (e) => {
    e.preventDefault();

@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(env.VITE_PORT), // Porta do Vite
       proxy: {
         '/api': {
-          target: env.VITE_API_URL, // URL da API
+          target: env.VITE_API_URL || 'http://localhost:3200',
           changeOrigin: true,
         },
         '/uploads': {

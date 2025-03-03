@@ -1,6 +1,6 @@
 // src/client/components/Jogos/UploadArea.jsx
 import React, { useState, useEffect } from 'react';
-import { Box, Grid, Card, CardMedia, Button, IconButton } from '@mui/material';
+import { Box, Grid, Card, CardMedia, Button, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
@@ -11,7 +11,10 @@ const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
  };
 
  const handleUpload = async () => {
-   if (!files.length) return;
+    if (!files.length || !jogoId) return;
+
+    console.log('Iniciando upload de arquivos para jogoId:', jogoId);
+    console.log('Arquivos:', files.map(f => f.name));
 
    const formData = new FormData();
    files.forEach(file => formData.append('images', file));
@@ -26,15 +29,20 @@ const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
      });
 
      if (response.ok) {
-       const data = await response.json();
-       onImagesChange([...images, ...data.files]);
-       setFiles([]);
-     }
-   } catch (error) {
-     console.error('Erro no upload:', error);
-     alert('Erro ao fazer upload das imagens');
-   }
- };
+        const errorText = await response.text();
+        console.error('Erro na resposta do servidor:', errorText);
+        throw new Error(`Erro no upload: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Resposta do upload:', data);
+      onImagesChange([...images, ...data.files]);
+      setFiles([]);
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro ao fazer upload das imagens: ' + error.message);
+    }
+  };
 
  const handleRemove = (index) => {
    const newImages = [...images];
