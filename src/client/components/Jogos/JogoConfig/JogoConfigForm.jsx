@@ -63,6 +63,9 @@ const JogoConfigForm = ({ open, onClose, onSuccess, menu }) => {
  const handleSubmit = async (e) => {
    e.preventDefault();
    try {
+     console.log('Dados do formulário a serem enviados:', formData);
+     console.log('Array de images (conteudo):', formData.conteudo);
+
      const response = await fetch(`/api/jogos/${menu.menu_id}/config`, {
        method: 'PUT',
        headers: {
@@ -71,7 +74,7 @@ const JogoConfigForm = ({ open, onClose, onSuccess, menu }) => {
        },
        body: JSON.stringify(formData)
      });
-
+     console.log('Status da resposta:', response.status);
      if (!response.ok) throw new Error('Erro ao salvar configuração');
      onSuccess();
      onClose();

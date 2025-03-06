@@ -1,6 +1,0 @@
-http://localhost:3000/4/bike.png,http://localhost:3000/4/bola.png,http://localhost:3000/4/boliche.png,http://localhost:3000/4/boxe.png,http://localhost:3000/4/bike.png
-
-
-http://localhost:3000/4/cover.png
-http://localhost:3000/4/fundo.png
-

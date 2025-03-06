@@ -6,6 +6,7 @@ import UploadArea from '../Upload/UploadArea';
 
 const JogoImagesConfig = ({ formData, onChange, jogoId }) => {
  const handleImageChange = (field, value) => {
+  console.log(`Atualizando ${field} com valor:`, value);
    onChange({
      ...formData,
      [field]: value

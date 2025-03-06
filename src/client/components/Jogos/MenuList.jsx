@@ -91,13 +91,7 @@ const handleReactivate = async (id) => {
 };
 
   const handleSubMenu = (parentMenuId) => {
-    if (window.confirm('Deseja navegar para o submenu?')) {
       navigate(`/jogos/menu/${parentMenuId}`);
-    } else {
-      setFormParentId(parentMenuId);
-      setSelectedItem(null);
-      setOpenForm(true);
-    }
   };
   
    const handleAddNew = () => {

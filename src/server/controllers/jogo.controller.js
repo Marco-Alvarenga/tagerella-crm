@@ -96,106 +96,147 @@ const jogoController = {
 
     // Atualizar jogo e suas configurações
     updateJogoConfig: async (req, res) => {
-		const client = await pool.connect();
-		try {
-		await client.query('BEGIN');
-		
-		const { menu_id } = req.params;
-		const { 
-			jogo_tipo_id,
-			numbers,
-			numbers_color,
-			n_imagens,
-			animation_type,
-			screensaver,
-			background,
-			coverimage,
-			conteudo
-		} = req.body;
-		
-		// Primeiro atualizar o tipo do jogo
-		await client.query(
-			'UPDATE jogo SET jogo_tipo_id = $1 WHERE menu_id = $2',
-			[jogo_tipo_id, menu_id]
-		);
-		
-		// Depois atualizar a configuração
-		const jogoResult = await client.query(
-			'SELECT jogo_id FROM jogo WHERE menu_id = $1',
-			[menu_id]
-		);
-		
-		if (jogoResult.rows.length === 0) {
-			throw new Error('Jogo não encontrado');
-		}
-		
-		const jogoId = jogoResult.rows[0].jogo_id;
-		
-		// Verificar se já existe configuração
-		const configExists = await client.query(
-			'SELECT 1 FROM jogo_config WHERE jogo_id = $1',
-			[jogoId]
-		);
-		
-		if (configExists.rows.length > 0) {
-			await client.query(`
-			UPDATE jogo_config SET
-				numbers = $1,
-				numbers_color = $2,
-				n_imagens = $3,
-				animation_type = $4,
-				screensaver = $5,
-				background = $6,
-				coverimage = $7,
-				conteudo = $8,
-				updated_at = CURRENT_TIMESTAMP
-			WHERE jogo_id = $9
-			`, [
-			numbers,
-			numbers_color,
-			n_imagens,
-			animation_type,
-			screensaver,
-			background,
-			coverimage,
-			conteudo,
-			jogoId
-			]);
-		} else {
-			await client.query(`
-			INSERT INTO jogo_config (
-				jogo_id,
-				numbers,
-				numbers_color,
-				n_imagens,
-				animation_type,
-				screensaver,
-				background,
-				coverimage,
-				conteudo
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-			`, [
-			jogoId,
-			numbers,
-			numbers_color,
-			n_imagens,
-			animation_type,
-			screensaver,
-			background,
-			coverimage,
-			conteudo
-			]);
-		}
-		
-		await client.query('COMMIT');
-		res.json({ success: true });
-		} catch (error) {
-		await client.query('ROLLBACK');
-		console.error('Erro ao atualizar:', error);
-		res.status(500).json({ message: error.message });
-		} finally {
-		client.release();
-		}
+        console.log('Recebido pedido PUT para atualizar config de jogo:', req.params.id);
+        console.log('Dados recebidos:', req.body);
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const { id } = req.params;
+            const { 
+                jogo_tipo_id,
+                numbers,
+                numbers_color,
+                n_imagens,
+                animation_type,
+                screensaver,
+                background,
+                coverimage,
+                conteudo
+            } = req.body;
+
+            // Verificar se o jogo existe na tabela jogo pelo menu_id
+            let jogoResult = await client.query(
+                'SELECT jogo_id FROM jogo WHERE menu_id = $1',
+                [id]
+            );
+
+            let jogoId;
+
+            // Se não existir, criar o jogo
+            if (jogoResult.rows.length === 0) {
+                console.log(`Jogo com menu_id ${id} não encontrado. Verificando se existe registro de menu.`);
+
+                // Verificar se o menu existe
+                const menuResult = await client.query(
+                    'SELECT nome, ordem FROM menu WHERE menu_id = $1',
+                    [id]
+                );
+
+                if (menuResult.rows.length === 0) {
+                    throw new Error(`Menu com ID ${id} não encontrado`);
+                }
+
+                const { nome, ordem } = menuResult.rows[0];
+
+                console.log(`Criando novo registro de jogo para menu "${nome}"`);
+                const novoJogoResult = await client.query(
+                    'INSERT INTO jogo (menu_id, jogo_tipo_id, nome, sort) VALUES ($1, $2, $3, $4) RETURNING jogo_id',
+                    [id, jogo_tipo_id, nome, ordem]
+                );
+                jogoId = novoJogoResult.rows[0].jogo_id;
+                console.log(`Novo jogo criado com jogo_id ${jogoId}`);
+            } else {
+                jogoId = jogoResult.rows[0].jogo_id;
+                console.log(`Jogo encontrado com jogo_id ${jogoId}`);
+
+                // Atualizar o tipo do jogo
+                await client.query(
+                    'UPDATE jogo SET jogo_tipo_id = $1 WHERE jogo_id = $2',
+                    [jogo_tipo_id, jogoId]
+                );
+            }
+
+            // Tratar o conteudo para PostgreSQL
+            let conteudoFormatado = null;
+            if (Array.isArray(conteudo)) {
+                // Transformar o array em uma string JSON escapada para o PostgreSQL
+                conteudoFormatado = JSON.stringify(conteudo);
+                console.log('conteudoFormatado para o banco:', conteudoFormatado);
+            }
+
+            // Verificar se já existe configuração
+            const configExists = await client.query(
+                'SELECT 1 FROM jogo_config WHERE jogo_id = $1',
+                [jogoId]
+            );
+
+                console.log('Configuração existente:', configExists.rows[0]);
+
+            if (configExists.rows.length > 0) {
+                console.log('Valor do conteudo antes da atualização:', configExists.rows[0].conteudo);
+                console.log('Novo valor de conteudo a ser salvo:', conteudo);
+                await client.query(`
+                UPDATE jogo_config SET
+                    numbers = $1,
+                    numbers_color = $2,
+                    n_imagens = $3,
+                    animation_type = $4,
+                    screensaver = $5,
+                    background = $6,
+                    coverimage = $7,
+                    conteudo = $8,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE jogo_id = $9
+                `, [
+                    numbers,
+                    numbers_color,
+                    n_imagens,
+                    animation_type,
+                    screensaver,
+                    background,
+                    coverimage,
+                    conteudoFormatado,
+                    jogoId
+                ]);
+            } else {
+                console.log(`Criando nova configuração para jogo_id ${jogoId}`);
+                await client.query(`
+                INSERT INTO jogo_config (
+                    jogo_id,
+                    numbers,
+                    numbers_color,
+                    n_imagens,
+                    animation_type,
+                    screensaver,
+                    background,
+                    coverimage,
+                    conteudo
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                `, [
+                    jogoId,
+                    numbers,
+                    numbers_color,
+                    n_imagens,
+                    animation_type,
+                    screensaver,
+                    background,
+                    coverimage,
+                    conteudoFormatado
+                ]);
+            }
+
+            await client.query('COMMIT');
+            console.log(`Configuração salva com sucesso para jogo_id ${jogoId}`);
+            res.json({ success: true, jogo_id: jogoId });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('Erro detalhado ao atualizar:', error);
+            res.status(500).json({ message: error.message });
+        } finally {
+            client.release();
+        }
     },
 
     // Desativar jogo (soft delete)

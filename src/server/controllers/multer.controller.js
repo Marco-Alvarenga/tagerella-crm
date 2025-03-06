@@ -42,6 +42,7 @@ class UploadController {
 
     async handleMultipleUpload(req, res) {
         try {
+        console.log('Arquivos recebidos:', req.files);
             if (!req.files || req.files.length === 0) {
                 return res.status(400).json({ error: 'Nenhum arquivo enviado' });
             }
@@ -49,6 +50,8 @@ class UploadController {
             const files = req.files.map(file => 
                 `/uploads/${req.params.jogo_id}/${file.filename}`
             );
+
+        console.log('Caminhos de arquivos gerados:', files);
 
             res.json({ 
                 message: 'Upload realizado com sucesso',

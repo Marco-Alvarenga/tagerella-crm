@@ -13,8 +13,7 @@ const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
  const handleUpload = async () => {
     if (!files.length || !jogoId) return;
 
-    console.log('Iniciando upload de arquivos para jogoId:', jogoId);
-    console.log('Arquivos:', files.map(f => f.name));
+  console.log('Iniciando upload de arquivos:', files);
 
    const formData = new FormData();
    files.forEach(file => formData.append('images', file));
@@ -29,15 +28,17 @@ const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
      });
 
      if (response.ok) {
-        const errorText = await response.text();
-        console.error('Erro na resposta do servidor:', errorText);
-        throw new Error(`Erro no upload: ${response.status} ${response.statusText}`);
-      }
-
       const data = await response.json();
-      console.log('Resposta do upload:', data);
+      console.log('Resposta do servidor após upload:', data);
+      console.log('Valor atual de images:', images);
       onImagesChange([...images, ...data.files]);
+      console.log('Novo valor de images após atualização:', [...images, ...data.files]);
       setFiles([]);
+    } else {
+      console.error('Erro na resposta do servidor:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('Detalhes do erro:', errorText);
+    }
     } catch (error) {
       console.error('Erro no upload:', error);
       alert('Erro ao fazer upload das imagens: ' + error.message);
@@ -54,7 +55,7 @@ const UploadArea = ({ jogoId, images = [], onImagesChange }) => {
    <Box className="border p-4 mt-4">
      <Typography variant="h6" gutterBottom>Cards</Typography>
      <Grid container spacing={2}>
-       {images.map((image, index) => (
+       {Array.isArray(images) && images.map((image, index) => (
          <Grid item xs={2} key={index}>
            <Card>
              <CardMedia

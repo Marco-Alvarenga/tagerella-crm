@@ -8,15 +8,15 @@ const jogoTipoController = require('../controllers/jogo.tipo.controller');
 const uploadController = require('../controllers/multer.controller');
 
 // Jogo routes
-router.get('/jogos/:id/config', jogoController.getJogoConfig);
-router.get('/jogos/:id/images', jogoController.getJogoImages);
-router.post('/jogos/config', jogoController.createJogoConfig);
-router.get('/jogos/check-config/:id', jogoController.checkJogoConfig);
-router.post('/jogos/init-config', jogoController.initializeJogoConfig);
-router.get('/jogos', jogoController.getAllJogos);
-router.post('/jogos', jogoController.createJogo);
-router.put('/jogos/:id/config', jogoController.updateJogoConfig);
-router.delete('/jogos/:id', jogoController.deleteJogo);
+router.get('/:id/config', jogoController.getJogoConfig);
+router.get('/:id/images', jogoController.getJogoImages);
+router.post('/config', jogoController.createJogoConfig);
+router.get('/check-config/:id', jogoController.checkJogoConfig);
+router.post('/init-config', jogoController.initializeJogoConfig);
+router.get('/', jogoController.getAllJogos);
+router.post('/', jogoController.createJogo);
+router.put('/:id/config', jogoController.updateJogoConfig);
+router.delete('/:id', jogoController.deleteJogo);
 
 // Menu routes
 router.get('/menu', menuController.getMenuStructure);
